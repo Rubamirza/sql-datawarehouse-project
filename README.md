@@ -33,3 +33,28 @@ Product Performance
 Sales Trends
 These insights empower stakeholders with key business metrics, enabling strategic decision-making.
 
+
+
+
+
+
+
+
+Challenges and Solutions:
+
+-Challenge 1: LOAD DATA not allowed in stored procedures
+
+Problem: 
+While implementing the Bronze Layer Data Load in MySQL, I initially attempted to combine table truncation and data loading inside a stored procedure (load_bronze()). However, this resulted in the following error:
+
+Error Code: 1314. LOAD DATA is not allowed in stored procedures
+
+Cause:
+MySQL does not allow LOAD DATA INFILE inside the stored procedure for security reasons.
+
+Solution:
+To work around this, I split the process into two separate scripts:
+1. proc_truncate_bronze.sql : Here, I stored a procedure that only truncates tables
+2.  load_bronze.sql : This SQL script loads data from CSV files using LOAD DATA INFILE
+
+This maintains automation, security, and logging while following MYSQL's restrictions.
