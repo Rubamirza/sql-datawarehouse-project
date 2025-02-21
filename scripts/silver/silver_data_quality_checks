@@ -2,9 +2,7 @@
 ===============================================================================
 Data Quality Checks: Bronze and Silver Tables
 ===============================================================================
-Author  : [Your Name]
-Date    : [YYYY-MM-DD]
-Purpose : Ensure data integrity before and after transformation.
+Purpose: Ensure data integrity before and after transformation.
           - Check Bronze tables before loading data to Silver.
           - Validate Silver tables after transformations.
 ===============================================================================
