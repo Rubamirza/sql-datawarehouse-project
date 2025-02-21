@@ -1,27 +1,61 @@
 /*
 ===============================================================================
-Purpose : Ensure data integrity, identify anomalies, and validate transformations.
+Data Quality Checks: silver_crm_cust_info & silver_crm_prd_info Tables
 ===============================================================================
+
+Purpose: Ensure data integrity, identify anomalies, and validate transformations.
+===============================================================================
+*/
+
+/*
+===============================================================================
+Data Quality Checks for silver_crm_cust_info Table
+===============================================================================
+*/
+
+-- Check for NULL values in critical columns
+SELECT * FROM silver_crm_cust_info 
+WHERE cst_id IS NULL 
+   OR cst_key IS NULL
+   OR cst_firstname IS NULL 
+   OR cst_lastname IS NULL;
+
+-- Check for unexpected values in cst_marital_status
+SELECT DISTINCT cst_marital_status FROM silver_crm_cust_info;
+-- Expected values: 'Single', 'Married', 'n/a'
+
+-- Check for unexpected values in cst_gndr
+SELECT DISTINCT cst_gndr FROM silver_crm_cust_info;
+-- Expected values: 'Male', 'Female', 'n/a'
+
+-- Validate that duplicate customers are removed
+SELECT cst_id, COUNT(*) 
+FROM silver_crm_cust_info
+GROUP BY cst_id
+HAVING COUNT(*) > 1;
+
+--  Check for invalid cst_create_date (e.g., future dates)
+SELECT * FROM silver_crm_cust_info 
+WHERE cst_create_date > CURRENT_DATE;
+
+/*
 ===============================================================================
 Data Quality Checks for silver_crm_prd_info Table
 ===============================================================================
 */
 
--- 1. Check for NULL or Negative Values in prd_cost
-SELECT prd_id, prd_cost
-FROM bronze_crm_prd_info
+--  Check for NULL or negative values in prd_cost
+SELECT * FROM silver_crm_prd_info 
 WHERE prd_cost < 0 OR prd_cost IS NULL;
 
--- 2. Validate prd_line values (Check for unexpected values)
-SELECT DISTINCT prd_line
-FROM bronze_crm_prd_info;
+--  Check for unexpected values in prd_line
+SELECT DISTINCT prd_line FROM silver_crm_prd_info;
+-- Expected values: 'Mountain', 'Road', 'Other Sales', 'Touring', 'Unknown'
 
--- 3. Check for invalid date orders (prd_end_dt must not be earlier than prd_start_dt)
-SELECT *
-FROM bronze_crm_prd_info
+--  Check for invalid date orders (prd_end_dt must not be earlier than prd_start_dt)
+SELECT * FROM silver_crm_prd_info 
 WHERE prd_end_dt < prd_start_dt;
 
--- 4. Verify if transformation to DATE was successful (No time component)
-SELECT prd_id, prd_start_dt, prd_end_dt
-FROM silver_crm_prd_info
+--  Verify the date transformation (No time component should exist)
+SELECT * FROM silver_crm_prd_info 
 WHERE prd_start_dt LIKE '%00:00:00%' OR prd_end_dt LIKE '%00:00:00%';
