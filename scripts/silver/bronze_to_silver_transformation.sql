@@ -1,9 +1,61 @@
 /*
 ===============================================================================
-Purpose : Transform raw product data from Bronze Layer to Silver Layer 
+Purpose: Transform raw product data from the Bronze Layer to the Silver Layer 
           - Cleansing & Standardization
           - Data Type Corrections
           - Handling NULLs & Invalid Values
+===============================================================================
+Bronze to Silver Transformation: silver_crm_cust_info Table
+===============================================================================
+*/
+-- =============================================================================
+--  Step 2: Transform & Load Data for silver_crm_cust_info (Customer Information)
+-- =============================================================================
+
+--  WHY ARE WE USING A TEMP TABLE HERE? 
+-- We must filter out duplicate `cst_id` records and retain only the latest entry per customer (based on `cst_create_date`).
+-- Since MySQL does not allow `WITH CTE` inside `INSERT INTO`, we use a TEMP TABLE 
+-- as a workaround to first filter the data before inserting it into the silver table.
+
+CREATE TEMPORARY TABLE temp_cte_result AS
+WITH cte_cust AS (
+    SELECT 
+        cst_id,
+        cst_key,
+        --  Trim whitespace from first & last names
+        TRIM(cst_firstname) AS cst_firstname,
+        TRIM(cst_lastname) AS cst_lastname,
+
+        --  Standardize Marital Status
+        CASE 
+            WHEN UPPER(TRIM(cst_marital_status)) = 'S' THEN 'Single'
+            WHEN UPPER(TRIM(cst_marital_status)) = 'M' THEN 'Married'
+            ELSE 'n/a'  
+        END AS cst_marital_status,
+
+        -- Standardize Gender
+        CASE 
+            WHEN UPPER(TRIM(cst_gndr)) = 'F' THEN 'Female'
+            WHEN UPPER(TRIM(cst_gndr)) = 'M' THEN 'Male'
+            ELSE 'n/a'  
+        END AS cst_gndr,
+
+        --  Ensure date formatting
+        CAST(cst_create_date AS DATE) AS cst_create_date,
+
+        --  Assign row numbers to filter out duplicate customer IDs (keep latest)
+        ROW_NUMBER() OVER (PARTITION BY cst_id ORDER BY cst_create_date DESC) AS flag_last
+
+    FROM bronze_crm_cust_info
+    WHERE cst_id IS NOT NULL
+)
+--  Select only the latest record per customer
+SELECT * FROM cte_cust WHERE flag_last = 1;
+
+
+
+
+ /*
 ===============================================================================
 Bronze to Silver Transformation: silver_crm_prd_info Table
 ===============================================================================
