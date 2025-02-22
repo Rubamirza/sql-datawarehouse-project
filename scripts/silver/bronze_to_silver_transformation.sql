@@ -101,3 +101,60 @@ SELECT
     CAST(LEAD(prd_start_dt) OVER (PARTITION BY prd_key ORDER BY prd_start_dt) - INTERVAL 1 DAY AS DATE) AS prd_end_dt
 
 FROM bronze_crm_prd_info;
+
+/*
+===============================================================================
+Bronze to Silver Transformation: silver_crm_sales_details Table
+===============================================================================
+*/
+-- insert and load silver_crm_sales_details:::
+INSERT INTO silver_crm_sales_details (
+    sls_ord_num,
+    sls_prd_key,
+    sls_cust_id,
+    sls_order_dt,
+    sls_ship_dt,
+    sls_due_dt,
+    sls_sales,
+    sls_quantity,
+    sls_price
+)
+SELECT 
+    sls_ord_num,
+    sls_prd_key,
+    sls_cust_id,
+
+    -- Convert sls_order_dt to DATE format if valid
+    CASE 
+        WHEN sls_order_dt = 0 OR LENGTH(sls_order_dt) != 8 THEN NULL
+        ELSE STR_TO_DATE(sls_order_dt, '%Y%m%d')
+    END AS sls_order_dt,
+
+    -- Convert sls_ship_dt to DATE format if valid
+    CASE 
+        WHEN sls_ship_dt = 0 OR LENGTH(sls_ship_dt) != 8 THEN NULL
+        ELSE STR_TO_DATE(sls_ship_dt, '%Y%m%d')
+    END AS sls_ship_dt,
+
+    -- Convert sls_due_dt to DATE format if valid
+    CASE 
+        WHEN sls_due_dt = 0 OR LENGTH(sls_due_dt) != 8 THEN NULL
+        ELSE STR_TO_DATE(sls_due_dt, '%Y%m%d')
+    END AS sls_due_dt,
+
+    -- Recalculate sales if the original value is missing or incorrect
+    CASE 
+        WHEN sls_sales IS NULL OR sls_sales <= 0 OR sls_sales != sls_quantity * ABS(sls_price) 
+        THEN sls_quantity * ABS(sls_price)
+        ELSE sls_sales
+    END AS sls_sales,
+
+    sls_quantity,
+
+    -- Derive price if the original value is invalid
+    CASE 
+        WHEN sls_price IS NULL OR sls_price <= 0 THEN sls_sales / NULLIF(sls_quantity, 0)
+        ELSE sls_price
+    END AS sls_price
+
+FROM bronze_crm_sales_details;
