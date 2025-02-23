@@ -273,3 +273,59 @@ HAVING COUNT(*) > 1;
 -- ✅ Ensure `gen` column is properly transformed
 SELECT * FROM silver_erp_cust_az12 
 WHERE gen NOT IN ('Male', 'Female', 'n/a');
+
+
+/*
+-------------------------------------------------------------------------------
+Step 5.1: Data Quality Checks on Bronze ERP Location Table (Before Transformation)
+-------------------------------------------------------------------------------
+*/
+
+-- ✅ Check for NULL values in critical columns before transformation
+SELECT * FROM bronze_erp_loc_a101 
+WHERE cid IS NULL 
+   OR cntry IS NULL;
+
+-- ✅ Ensure `cid` column format matches `silver_crm_cust_info` (Remove Dashes)
+SELECT 
+    REPLACE(cid, '-', '') AS cid,
+    cntry
+FROM bronze_erp_loc_a101;
+
+-- ✅ Check for all possible values in `cntry` column (Country Data Consistency)
+SELECT DISTINCT cntry
+FROM bronze_erp_loc_a101
+ORDER BY cntry;
+-- Expected: 'Australia', 'Canada', 'DE', 'France', 'Germany', 'United Kingdom', 'United States', 'US', 'USA'
+
+-- ✅ Standardize country names for consistency
+SELECT 
+    REPLACE(cid, '-', '') AS cid,
+    CASE 
+        WHEN TRIM(cntry) = 'DE' THEN 'Germany'
+        WHEN TRIM(cntry) IN ('US', 'USA') THEN 'United States'
+        WHEN TRIM(cntry) = '' OR cntry IS NULL THEN 'n/a'
+        ELSE TRIM(cntry)
+    END AS cntry
+FROM bronze_erp_loc_a101;
+
+/*
+-------------------------------------------------------------------------------
+Step 5.2: Data Quality Checks on Silver ERP Location Table (After Transformation)
+-------------------------------------------------------------------------------
+*/
+
+-- ✅ Ensure `cid` column is correctly formatted (No Dashes)
+SELECT * FROM silver_erp_loc_a101 
+WHERE cid LIKE '%-%';
+
+-- ✅ Validate transformed `cntry` values (Should be standardized)
+SELECT DISTINCT cntry FROM silver_erp_loc_a101;
+-- Expected: 'Australia', 'Canada', 'France', 'Germany', 'United Kingdom', 'United States', 'n/a'
+
+-- ✅ Check for NULL or missing values in `cntry`
+SELECT * FROM silver_erp_loc_a101 
+WHERE cntry IS NULL OR cntry = '';
+
+
+
