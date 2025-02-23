@@ -191,4 +191,34 @@ SELECT
 FROM bronze_erp_cust_az12;
 
 
+/*
+===============================================================================
+Bronze to Silver Transformation:silver_erp_loc_a101 Table
+===============================================================================
+*/
+
+
+insert into silver_erp_loc_a101(cid,cntry)
+select
+replace(cid,'-','')cid,
+case when trim(cntry) = 'DE' then 'Germany'
+	when trim(cntry) IN ('US','USA') then 'United States'
+	when trim(cntry) = '' or cntry is null then 'n/a'
+    else trim(cntry)
+end as cntry
+from bronze_erp_loc_a101;
+
+
+
+/*
+===============================================================================
+Bronze to Silver Transformation: silver_erp_px_cat_g1v2 Table
+===============================================================================
+*/
+
+
+
+INSERT INTO silver_erp_px_cat_g1v2 (id, cat, subcat, maintenance)
+SELECT id, cat, subcat, maintenance
+FROM bronze_erp_px_cat_g1v2;
 
