@@ -327,5 +327,62 @@ SELECT DISTINCT cntry FROM silver_erp_loc_a101;
 SELECT * FROM silver_erp_loc_a101 
 WHERE cntry IS NULL OR cntry = '';
 
+/*
+===============================================================================
+SECTION 6: ERP CATEGORY TABLE QUALITY CHECKS (silver_erp_px_cat_g1v2)
+===============================================================================
+*/
 
+/*
+-------------------------------------------------------------------------------
+Step 6.1: Data Quality Checks on Bronze ERP Category Table (Before Transformation)
+-------------------------------------------------------------------------------
+*/
+
+-- ✅ Check for NULL values in critical columns before transformation
+SELECT * FROM bronze_erp_px_cat_g1v2 
+WHERE id IS NULL 
+   OR cat IS NULL 
+   OR subcat IS NULL 
+   OR maintenance IS NULL;
+
+-- ✅ Check for unwanted spaces in `cat`, `subcat`, and `maintenance` columns
+SELECT * FROM bronze_erp_px_cat_g1v2
+WHERE cat != TRIM(cat) 
+   OR subcat != TRIM(subcat) 
+   OR maintenance != TRIM(maintenance);
+
+-- ✅ Validate category values consistency
+SELECT DISTINCT cat FROM bronze_erp_px_cat_g1v2;
+-- Expected: All categories should be consistent.
+
+-- ✅ Validate maintenance values consistency
+SELECT DISTINCT maintenance FROM bronze_erp_px_cat_g1v2;
+-- Expected: All maintenance values should be standardized.
+
+/*
+-------------------------------------------------------------------------------
+Step 6.2: Data Quality Checks on Silver ERP Category Table (After Transformation)
+-------------------------------------------------------------------------------
+*/
+
+-- ✅ Check for NULL values in Silver (Should be cleaned)
+SELECT * FROM silver_erp_px_cat_g1v2 
+WHERE id IS NULL 
+   OR cat IS NULL 
+   OR subcat IS NULL 
+   OR maintenance IS NULL;
+
+-- ✅ Validate transformed `cat` values in Silver
+SELECT DISTINCT cat FROM silver_erp_px_cat_g1v2;
+-- Expected: All category values should remain consistent.
+
+-- ✅ Validate transformed `maintenance` values in Silver
+SELECT DISTINCT maintenance FROM silver_erp_px_cat_g1v2;
+-- Expected: All maintenance values should remain consistent.
+
+-- ✅ Ensure `id` column is correctly mapped to `prd_key` in `silver.crm_prd_info`
+SELECT id 
+FROM silver_erp_px_cat_g1v2
+WHERE id NOT IN (SELECT prd_key FROM silver.crm_prd_info);
 
