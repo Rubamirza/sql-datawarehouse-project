@@ -58,3 +58,20 @@ To work around this, I split the process into two separate scripts:
 2.  load_bronze.sql : This SQL script loads data from CSV files using LOAD DATA INFILE
 
 This maintains automation, security, and logging while following MYSQL's restrictions.
+
+Alternative Approach: Using Python for More Flexibility:
+
+In real-world ETL pipelines, Python is commonly used for data ingestion and automation.
+
+While I implemented a SQL-based approach for data loading, an alternative solution could have been using Python with pandas and pymysql to handle the data ingestion process. This approach would allow for:
+
+-Automating file detection and loading, eliminating the need for hardcoded filenames.
+-Better error handling, ensuring the pipeline continues running even if one file fails.
+-Flexibility in choosing between direct SQL insertion (pymysql) and bulk insertion (pandas.to_sql) for performance optimization.
+-Integration with external data sources, such as APIs, cloud storage (AWS S3, Google Drive), or other databases.
+
+Another possible hybrid approach could involve:
+- Using Python for automation (detecting and managing files).
+- Using LOAD DATA INFILE in MySQL for fast bulk insertion.
+
+Although I opted for a pure SQL-based ingestion approach, recognizing alternative methods showcases adaptability and problem-solving skills in ETL design.
