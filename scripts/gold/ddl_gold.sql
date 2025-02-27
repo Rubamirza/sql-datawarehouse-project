@@ -4,18 +4,18 @@
 DDL Script: Create Gold Layer Views
 ===============================================================================
  Purpose:
-    - This script creates the **Gold Layer Views** in the Data Warehouse.
-    - The **Gold Layer** consists of transformed, enriched, and analytics-ready data.
-    - This layer follows the **Star Schema** approach:
+    - This script creates the gold layer views in the Data Warehouse.
+    - The gold layer consists of transformed, enriched, and analytics-ready data.
+    - This layer follows the Star Schema approach:
         - Dimension Tables (`dim_*`)
         - Fact Tables (`fact_*`)
 
  Usage:
     - These views can be queried for analytics and reporting.
-    - Ensure **Silver Layer** tables are available before running this script.
+    - Ensure silver layer tables are available before running this script.
 
- Assumptions:.
-    - `silver_*` tables exist and contain **cleaned, enriched data**.
+ Assumptions:
+    - `silver_*` tables exist and contain cleaned enriched data.
 ===============================================================================
 */
 
